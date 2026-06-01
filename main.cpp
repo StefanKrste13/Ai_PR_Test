@@ -11,6 +11,17 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
+
+
+
+
+
+SSSSS
+
+
+
+
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,
