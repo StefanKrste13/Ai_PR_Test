@@ -20,4 +20,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG__MODEL: "ollama/qwen3.5:122b"
-          OLLAMA__API_BASE: "https://budget-gracious-boozy.ngrok-free.dev"
+          OLLAMA__API_BASE: "https://budget-gracious-boozy.ngrok-free.dev/v1"
