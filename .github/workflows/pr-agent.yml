@@ -19,5 +19,5 @@ jobs:
         uses: the-pr-agent/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG.MODEL: "ollama/qwen3.5:122b"
-          OLLAMA.API_BASE: "https://budget-gracious-boozy.ngrok-free.dev"
+          CONFIG__MODEL: "ollama/qwen3.5:122b"
+          OLLAMA__API_BASE: "https://budget-gracious-boozy.ngrok-free.dev"
