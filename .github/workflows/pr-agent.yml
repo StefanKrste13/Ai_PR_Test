@@ -20,4 +20,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG.MODEL: "ollama/qwen3.5:122b"
-          OLLAMA.API_BASE: "https://your-ngrok-url.app"
+          OLLAMA.API_BASE: "https://your-new-ngrok-url.ngrok-free.app"
