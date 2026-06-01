@@ -20,6 +20,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG__MODEL: "openai/qwen3.5:122b"
-          CONFIG__FALLBACK_MODELS: '["openai/qwen3.5:122b"]'
           OPENAI__API_BASE: "https://budget-gracious-boozy.ngrok-free.dev/v1"
-          OPENAI_API_KEY: "ollama"
+          OPENAI_KEY: "dummy-key"
