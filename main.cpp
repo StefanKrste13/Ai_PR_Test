@@ -11,24 +11,13 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-
-
-
-
-
-SSSSS
-
-
-
-
-
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
-    engine.loadFromModule("AiTest", "Main");
+    engine.loadFromModule("AiTest", "Main",{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}});
 
     return app.exec();
 }
