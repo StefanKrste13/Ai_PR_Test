@@ -42,15 +42,14 @@ jobs:
               },
               "prompt": (
                   "You are a senior software engineer reviewing a pull request.\n"
-                  "Return ONLY a concise review.\n"
-                  "NO thinking process.\n\n"
+                  "Return ONLY markdown text.\n"
+                  "NO thinking. NO JSON. NO context.\n\n"
                   "Format:\n"
                   "- Bugs\n"
                   "- Security issues\n"
                   "- Performance issues\n"
                   "- Improvements\n"
                   "- Summary\n\n"
-                  "If the diff is too large, focus only on the most important changes.\n\n"
                   "DIFF:\n"
               ) + diff
           }
@@ -81,16 +80,19 @@ jobs:
 
             try {
               const data = JSON.parse(raw);
-              text =
-                data.response ||
-                data.message?.content ||
-                JSON.stringify(data);
+              text = data.response || "";
             } catch (e) {
               text = raw;
             }
 
-            if (!text || text.trim() === "") {
-              text = "❌ Empty AI response (reduce diff size or increase model limits)";
+            // FIX: remove Ollama artifacts
+            text = text
+              .replace(/<think>[\s\S]*?<\/think>/g, '')
+              .replace(/thinking[\s\S]*/i, '')
+              .trim();
+
+            if (!text) {
+              text = "❌ Empty AI response (model failed or truncated)";
             }
 
             await github.rest.issues.createComment({
