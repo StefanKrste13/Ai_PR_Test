@@ -1,23 +1,52 @@
-name: PR Agent
+name: AI PR Review (Ollama Local)
+
 on:
   pull_request:
-    types: [opened, synchronize]
-  issue_comment:
-    types: [created]
-
-permissions:
-  issues: write
-  pull-requests: write
-  contents: write
+    types: [opened, synchronize, reopened]
 
 jobs:
-  pr_agent_job:
-    if: ${{ github.event.sender.type != 'Bot' }}
+  ai-review:
     runs-on: ubuntu-latest
+
     steps:
-      - name: PR Agent action step
-        uses: the-pr-agent/pr-agent@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "ollama/qwen3.5:122b"
-          OLLAMA_API_BASE: "https://jabso-195-228-39-198.run.pinggy-free.link"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate PR diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > diff.txt
+
+      - name: Send diff to local Ollama (via ngrok)
+        run: |
+          RESPONSE=$(curl -s https://budget-gracious-boozy.ngrok-free.dev/api/generate \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"model\": \"qwen3.5:35b\",
+            \"stream\": false,
+            \"prompt\": \"You are a senior software engineer reviewing a GitHub pull request.\\n\\nAnalyze the following diff and provide:\\n- Bugs\\n- Security issues\\n- Performance problems\\n- Code quality improvements\\n- Short summary\\n\\nDIFF:\\n$(cat diff.txt)\"
+          }")
+
+          echo "$RESPONSE" > response.json
+
+      - name: Extract AI response
+        run: |
+          cat response.json
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            const raw = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## 🤖 AI Code Review\n\n${raw.response}`
+            });
