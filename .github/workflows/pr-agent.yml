@@ -24,7 +24,7 @@ jobs:
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
-          | head -c 12000 > diff.txt
+          | head -c 6000 > diff.txt
 
       - name: Create payload
         run: |
@@ -38,12 +38,16 @@ jobs:
               "stream": False,
               "options": {
                   "num_predict": 1024,
-                  "temperature": 0.2
+                  "temperature": 0.2,
+                  "num_ctx": 8192,
+                  "stop": []
               },
               "prompt": (
                   "You are a senior software engineer reviewing a pull request.\n"
-                  "Return ONLY markdown text.\n"
-                  "NO thinking. NO JSON. NO context.\n\n"
+                  "You MUST always return a review.\n"
+                  "Never return empty output.\n"
+                  "Never think out loud.\n"
+                  "Return ONLY markdown.\n\n"
                   "Format:\n"
                   "- Bugs\n"
                   "- Security issues\n"
@@ -60,7 +64,8 @@ jobs:
 
       - name: Call Ollama via ngrok
         run: |
-          curl -s https://budget-gracious-boozy.ngrok-free.dev/api/generate \
+          curl --fail --silent --show-error \
+          https://budget-gracious-boozy.ngrok-free.dev/api/generate \
           -H "Content-Type: application/json" \
           -d @payload.json > response.json
 
@@ -85,7 +90,6 @@ jobs:
               text = raw;
             }
 
-            // FIX: remove Ollama artifacts
             text = text
               .replace(/<think>[\s\S]*?<\/think>/g, '')
               .replace(/thinking[\s\S]*/i, '')
