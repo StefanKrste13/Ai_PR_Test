@@ -24,7 +24,7 @@ jobs:
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
-          | head -c 6000 > diff.txt
+          | head -c 12000 > diff.txt
 
       - name: Create payload
         run: |
@@ -38,22 +38,19 @@ jobs:
               "stream": False,
               "options": {
                   "num_predict": 1024,
-                  "temperature": 0.2,
-                  "num_ctx": 8192,
-                  "stop": []
+                  "temperature": 0.2
               },
               "prompt": (
                   "You are a senior software engineer reviewing a pull request.\n"
-                  "You MUST always return a review.\n"
-                  "Never return empty output.\n"
-                  "Never think out loud.\n"
-                  "Return ONLY markdown.\n\n"
+                  "Return ONLY a concise review.\n"
+                  "NO thinking process.\n\n"
                   "Format:\n"
                   "- Bugs\n"
                   "- Security issues\n"
                   "- Performance issues\n"
                   "- Improvements\n"
                   "- Summary\n\n"
+                  "If the diff is too large, focus only on the most important changes.\n\n"
                   "DIFF:\n"
               ) + diff
           }
@@ -64,8 +61,7 @@ jobs:
 
       - name: Call Ollama via ngrok
         run: |
-          curl --fail --silent --show-error \
-          https://budget-gracious-boozy.ngrok-free.dev/api/generate \
+          curl -s https://budget-gracious-boozy.ngrok-free.dev/api/generate \
           -H "Content-Type: application/json" \
           -d @payload.json > response.json
 
@@ -85,18 +81,16 @@ jobs:
 
             try {
               const data = JSON.parse(raw);
-              text = data.response || "";
+              text =
+                data.response ||
+                data.message?.content ||
+                JSON.stringify(data);
             } catch (e) {
               text = raw;
             }
 
-            text = text
-              .replace(/<think>[\s\S]*?<\/think>/g, '')
-              .replace(/thinking[\s\S]*/i, '')
-              .trim();
-
-            if (!text) {
-              text = "❌ Empty AI response (model failed or truncated)";
+            if (!text || text.trim() === "") {
+              text = "❌ Empty AI response (reduce diff size or increase model limits)";
             }
 
             await github.rest.issues.createComment({
