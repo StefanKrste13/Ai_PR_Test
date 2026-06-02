@@ -19,6 +19,5 @@ jobs:
         uses: the-pr-agent/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "openai/qwen3.5:122b" 
-          OPENAI_API_BASE: "https://jabso-195-228-39-198.run.pinggy-free.link/v1"
-          OPENAI_API_KEY: "dummy-key"
+          CONFIG__MODEL: "ollama/qwen3.5:122b"
+          OLLAMA_API_BASE: "https://jabso-195-228-39-198.run.pinggy-free.link"
