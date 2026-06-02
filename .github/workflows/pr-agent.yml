@@ -1,55 +1,39 @@
-name: AI PR Review (Ollama + ngrok)
+name: AI PR Review (Ollama)
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
   review:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get PR diff
+      - name: Get diff
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > diff.txt
 
-      - name: Create safe JSON payload
+      - name: Create payload
         run: |
           python3 - << 'EOF'
           import json
 
           diff = open("diff.txt", "r", errors="ignore").read()
 
-          prompt = f"""
-You are a senior software engineer reviewing a GitHub pull request.
-
-Provide:
-- Bugs
-- Security issues
-- Performance issues
-- Code quality improvements
-- Short summary
-
-IMPORTANT: Be precise and practical.
-
-DIFF:
-{diff}
-"""
-
           payload = {
               "model": "qwen3.5:35b",
               "stream": False,
-              "prompt": prompt
+              "prompt": "Review this PR:\n\n" + diff
           }
 
-          with open("payload.json", "w") as f:
-              json.dump(payload, f)
+          open("payload.json", "w").write(json.dumps(payload))
           EOF
 
       - name: Call Ollama via ngrok
@@ -58,21 +42,17 @@ DIFF:
           -H "Content-Type: application/json" \
           -d @payload.json > response.json
 
-      - name: Show AI response (debug)
-        run: cat response.json
-
-      - name: Post PR comment
+      - name: Post comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-
             const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "## 🤖 AI Code Review\n\n" + data.response
+              body: "## AI Review\n\n" + data.response
             });
