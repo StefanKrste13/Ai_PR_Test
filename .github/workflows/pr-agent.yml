@@ -42,14 +42,15 @@ jobs:
               },
               "prompt": (
                   "You are a senior software engineer reviewing a pull request.\n"
-                  "Return ONLY a clean readable PR review.\n"
-                  "DO NOT include thinking process or JSON.\n\n"
+                  "Return ONLY a concise review.\n"
+                  "NO thinking process.\n\n"
                   "Format:\n"
                   "- Bugs\n"
                   "- Security issues\n"
                   "- Performance issues\n"
                   "- Improvements\n"
                   "- Summary\n\n"
+                  "If the diff is too large, focus only on the most important changes.\n\n"
                   "DIFF:\n"
               ) + diff
           }
@@ -67,7 +68,7 @@ jobs:
       - name: Debug response
         run: cat response.json
 
-      - name: Post comment (FIXED CLEAN OUTPUT)
+      - name: Post comment
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,18 +81,16 @@ jobs:
 
             try {
               const data = JSON.parse(raw);
-              text = data.response || "";
+              text =
+                data.response ||
+                data.message?.content ||
+                JSON.stringify(data);
             } catch (e) {
               text = raw;
             }
 
-            text = text
-              .replace(/\\n/g, "\n")
-              .replace(/\\r/g, "")
-              .trim();
-
-            if (!text || text.length < 10) {
-              text = "❌ Empty AI response (model truncated or failed)";
+            if (!text || text.trim() === "") {
+              text = "❌ Empty AI response (reduce diff size or increase model limits)";
             }
 
             await github.rest.issues.createComment({
