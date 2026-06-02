@@ -17,8 +17,8 @@ jobs:
     steps:
       - name: PR Agent action step
         uses: the-pr-agent/pr-agent@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "openai/qwen3.5:122b"
-          OPENAI__API_BASE: "https://budget-gracious-boozy.ngrok-free.dev/v1"
-          OPENAI_KEY: "dummy-key"
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CONFIG__MODEL: "openai/qwen3.5:122b"
+      OPENAI_API_BASE: "https://respondent-discount-conceptual-oct.trycloudflare.com/v1"
+      OPENAI_API_KEY: "dummy-key"
