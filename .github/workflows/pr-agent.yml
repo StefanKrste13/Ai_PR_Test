@@ -36,9 +36,9 @@ jobs:
               "model": "qwen3.5:35b",
               "stream": False,
               "options": {
-                  "num_predict": 512
+                  "num_predict": 2048
               },
-              "prompt": "Review this PR:\n\n" + diff
+              "prompt": "You are a senior software engineer. ONLY return concise PR review (no thinking process).\\n\\nReview this PR:\\n\\n" + diff
           }
 
           with open("payload.json", "w") as f:
@@ -67,16 +67,13 @@ jobs:
 
             try {
               const data = JSON.parse(raw);
-              text =
-                data.response ||
-                data.message?.content ||
-                JSON.stringify(data);
+              text = data.response || "";
             } catch (e) {
               text = raw;
             }
 
             if (!text || text.trim() === "") {
-              text = "❌ No AI response generated";
+              text = "❌ Model output empty (increase num_predict or reduce diff size)";
             }
 
             await github.rest.issues.createComment({
