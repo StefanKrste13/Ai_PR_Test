@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -56,16 +61,7 @@ jobs:
           script: |
             const fs = require('fs');
 
-            let raw = fs.readFileSync('response.json', 'utf8');
-
-            let data;
-            try {
-              data = JSON.parse(raw);
-            } catch (e) {
-              data = {
-                response: "AI review failed: invalid response format from model."
-              };
-            }
+            const data = JSON.parse(fs.readFileSync('response.json', 'utf8'));
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
