@@ -20,10 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get diff
+      - name: Get diff (trimmed)
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD > diff.txt
+          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
+          | head -c 12000 > diff.txt
 
       - name: Create payload
         run: |
@@ -36,9 +37,22 @@ jobs:
               "model": "qwen3.5:35b",
               "stream": False,
               "options": {
-                  "num_predict": 2048
+                  "num_predict": 1024,
+                  "temperature": 0.2
               },
-              "prompt": "You are a senior software engineer. ONLY return concise PR review (no thinking process).\\n\\nReview this PR:\\n\\n" + diff
+              "prompt": (
+                  "You are a senior software engineer reviewing a pull request.\n"
+                  "Return ONLY a concise review.\n"
+                  "NO thinking process.\n\n"
+                  "Format:\n"
+                  "- Bugs\n"
+                  "- Security issues\n"
+                  "- Performance issues\n"
+                  "- Improvements\n"
+                  "- Summary\n\n"
+                  "If the diff is too large, focus only on the most important changes.\n\n"
+                  "DIFF:\n"
+              ) + diff
           }
 
           with open("payload.json", "w") as f:
@@ -67,13 +81,16 @@ jobs:
 
             try {
               const data = JSON.parse(raw);
-              text = data.response || "";
+              text =
+                data.response ||
+                data.message?.content ||
+                JSON.stringify(data);
             } catch (e) {
               text = raw;
             }
 
             if (!text || text.trim() === "") {
-              text = "❌ Model output empty (increase num_predict or reduce diff size)";
+              text = "❌ Empty AI response (reduce diff size or increase model limits)";
             }
 
             await github.rest.issues.createComment({
