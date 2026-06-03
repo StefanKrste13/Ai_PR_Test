@@ -23,7 +23,7 @@ jobs:
       - name: Get diff (trimmed)
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
+          git -U20 diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
           | head -c 12000 > diff.txt
 
       - name: Create payload
@@ -74,23 +74,23 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-
             const raw = fs.readFileSync('response.json', 'utf8');
-
             let text = "";
 
             try {
               const data = JSON.parse(raw);
-              text =
-                data.response ||
-                data.message?.content ||
-                JSON.stringify(data);
+              
+              if (data.response) {
+                text = data.response;
+              } else if (data.message && data.message.content) {
+                text = data.message.content;
+              } else if (data.done_reason === "length") {
+                text = "❌ AI ran out of tokens while thinking. Increase `num_predict`.";
+              } else {
+                text = "❌ AI returned an empty response.";
+              }
             } catch (e) {
-              text = raw;
-            }
-
-            if (!text || text.trim() === "") {
-              text = "❌ Empty AI response (reduce diff size or increase model limits)";
+              text = "❌ Failed to parse JSON. Raw output:\n\n```json\n" + raw + "\n```";
             }
 
             await github.rest.issues.createComment({
