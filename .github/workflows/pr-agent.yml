@@ -37,7 +37,7 @@ jobs:
               "model": "qwen3.5:35b",
               "stream": False,
               "options": {
-                  "num_predict": 8192,
+                  "num_predict": 4096,
                   "temperature": 0.2
               },
               "prompt": (
