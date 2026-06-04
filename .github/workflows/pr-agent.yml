@@ -23,7 +23,7 @@ jobs:
       - name: Get diff (trimmed)
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          git -U20 diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
+          git diff origin/${{ github.event.pull_request.base.ref }}...HEAD \
           | head -c 12000 > diff.txt
 
       - name: Create payload
@@ -34,10 +34,10 @@ jobs:
           diff = open("diff.txt", "r", errors="ignore").read()
 
           payload = {
-              "model": "qwen3.5:35b",
+              "model": "qwen3.5:122b",
               "stream": False,
               "options": {
-                  "num_predict": 4096,
+                  "num_predict": 2048,
                   "temperature": 0.2
               },
               "prompt": (
@@ -74,23 +74,23 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
+
             const raw = fs.readFileSync('response.json', 'utf8');
+
             let text = "";
 
             try {
               const data = JSON.parse(raw);
-              
-              if (data.response) {
-                text = data.response;
-              } else if (data.message && data.message.content) {
-                text = data.message.content;
-              } else if (data.done_reason === "length") {
-                text = "❌ AI ran out of tokens while thinking. Increase `num_predict`.";
-              } else {
-                text = "❌ AI returned an empty response.";
-              }
+              text =
+                data.response ||
+                data.message?.content ||
+                JSON.stringify(data);
             } catch (e) {
-              text = "❌ Failed to parse JSON. Raw output:\n\n```json\n" + raw + "\n```";
+              text = raw;
+            }
+
+            if (!text || text.trim() === "") {
+              text = "❌ Empty AI response (reduce diff size or increase model limits)";
             }
 
             await github.rest.issues.createComment({
