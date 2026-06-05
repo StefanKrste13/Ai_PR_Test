@@ -19,6 +19,8 @@ void TextProcessor::setResultText(const QString &text)
     }
 }
 
+
+dffffffffff
 QString TextProcessor::processText(const QString &input)
 {
     QString upper = input.toUpper();
