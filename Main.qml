@@ -111,8 +111,6 @@ ApplicationWindow {
             }
         }
 
-        testteete
-
         // Footer Info
         Text {
             Layout.alignment: Qt.AlignHCenter
